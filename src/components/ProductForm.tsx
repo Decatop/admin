@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import type { AdminProduct } from '@/lib/types';
-import ImageUpload from './ImageUpload';
+import ProductGalleryEditor from './ProductGalleryEditor';
 
 export type ProductFormValues = Omit<AdminProduct, 'id' | 'updatedAt'> & { id?: string };
 
@@ -24,6 +24,9 @@ export const EMPTY_PRODUCT: ProductFormValues = {
   imageUrl: null,
   imagePublicId: null,
   imageAlt: '',
+  galleryImages: [],
+  installationVideos: [],
+  specifications: [],
   description: '',
   active: true,
   featured: false,
@@ -41,14 +44,35 @@ export default function ProductForm({ initial }: { initial: ProductFormValues })
   const set = <K extends keyof ProductFormValues>(key: K, value: ProductFormValues[K]) =>
     setV((previous) => ({ ...previous, [key]: value }));
 
+  function updateGallery(galleryImages: ProductFormValues['galleryImages']) {
+    const firstImage = galleryImages[0];
+    setV((previous) => ({
+      ...previous,
+      galleryImages,
+      imageUrl: firstImage?.url ?? null,
+      imagePublicId: firstImage?.publicId ?? null,
+      imageAlt: firstImage?.alt ?? '',
+    }));
+  }
+
   async function save() {
     setSaving(true);
     setError('');
     try {
+      const payload = {
+        ...v,
+        installationVideos: v.installationVideos.map((video) => video.trim()).filter(Boolean),
+        specifications: v.specifications
+          .filter((specification) => specification.name.trim() || specification.value.trim())
+          .map((specification) => ({
+            name: specification.name.trim(),
+            value: specification.value.trim(),
+          })),
+      };
       if (v.id) {
-        await api.put(`/products/${v.id}`, v);
+        await api.put(`/products/${v.id}`, payload);
       } else {
-        await api.post('/products', v);
+        await api.post('/products', payload);
       }
       router.push('/products');
       router.refresh();
@@ -95,16 +119,17 @@ export default function ProductForm({ initial }: { initial: ProductFormValues })
               />
             </div>
             <div>
-              <label className="label" htmlFor="product-description">Short description</label>
+              <label className="label" htmlFor="product-description">Product description</label>
               <textarea
                 id="product-description"
                 className="input"
-                rows={3}
-                maxLength={500}
+                rows={6}
+                maxLength={3000}
                 value={v.description}
                 onChange={(e) => set('description', e.target.value)}
-                placeholder="A short, useful description for customers."
+                placeholder="Describe the product, its finish, recommended uses, and care."
               />
+              <p className="mt-1 text-xs text-brand-muted">{v.description.length}/3000 characters</p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
@@ -241,31 +266,100 @@ export default function ProductForm({ initial }: { initial: ProductFormValues })
                 placeholder="/articles/price-guide"
               />
             </div>
+            <div>
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-bold text-brand-ink">Detailed specifications</h3>
+                  <p className="mt-1 text-xs text-brand-muted">Add useful product attributes such as finish, use, or care.</p>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  disabled={v.specifications.length >= 30}
+                  onClick={() => set('specifications', [...v.specifications, { name: '', value: '' }])}
+                >
+                  Add specification
+                </button>
+              </div>
+              <div className="space-y-3">
+                {v.specifications.map((specification, index) => (
+                  <div key={index} className="grid gap-3 sm:grid-cols-[1fr_1.5fr_auto]">
+                    <input
+                      className="input"
+                      maxLength={80}
+                      aria-label={`Specification ${index + 1} name`}
+                      value={specification.name}
+                      onChange={(event) => set('specifications', v.specifications.map((item, itemIndex) => (
+                        itemIndex === index ? { ...item, name: event.target.value } : item
+                      )))}
+                      placeholder="Name, e.g. Finish"
+                    />
+                    <input
+                      className="input"
+                      maxLength={300}
+                      aria-label={`Specification ${index + 1} value`}
+                      value={specification.value}
+                      onChange={(event) => set('specifications', v.specifications.map((item, itemIndex) => (
+                        itemIndex === index ? { ...item, value: event.target.value } : item
+                      )))}
+                      placeholder="Value, e.g. Gloss"
+                    />
+                    <button
+                      type="button"
+                      className="text-sm text-gray-500 hover:text-red-600"
+                      onClick={() => set('specifications', v.specifications.filter((_, itemIndex) => itemIndex !== index))}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div>
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-bold text-brand-ink">Installation videos</h3>
+                  <p className="mt-1 text-xs text-brand-muted">Use secure YouTube or Vimeo video links.</p>
+                </div>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  disabled={v.installationVideos.length >= 12}
+                  onClick={() => set('installationVideos', [...v.installationVideos, ''])}
+                >
+                  Add video
+                </button>
+              </div>
+              <div className="space-y-3">
+                {v.installationVideos.map((video, index) => (
+                  <div key={index} className="flex gap-3">
+                    <input
+                      type="url"
+                      className="input"
+                      aria-label={`Installation video URL ${index + 1}`}
+                      value={video}
+                      onChange={(event) => set('installationVideos', v.installationVideos.map((item, itemIndex) => (
+                        itemIndex === index ? event.target.value : item
+                      )))}
+                      placeholder="https://youtu.be/..."
+                    />
+                    <button
+                      type="button"
+                      className="text-sm text-gray-500 hover:text-red-600"
+                      onClick={() => set('installationVideos', v.installationVideos.filter((_, itemIndex) => itemIndex !== index))}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
           </section>
         </div>
 
         <aside className="space-y-4">
           <section className="card">
-            <ImageUpload
-              label="Product image"
-              value={v.imageUrl}
-              folder="products"
-              onUploaded={(url, publicId) => {
-                set('imageUrl', url || null);
-                set('imagePublicId', publicId || null);
-              }}
-            />
-            <div className="mt-4">
-              <label className="label" htmlFor="product-image-alt">Image alt text</label>
-              <input
-                id="product-image-alt"
-                maxLength={200}
-                className="input"
-                value={v.imageAlt}
-                onChange={(e) => set('imageAlt', e.target.value)}
-                placeholder="Describe the product image"
-              />
-            </div>
+            <ProductGalleryEditor images={v.galleryImages} onChange={updateGallery} />
           </section>
           <section className="card space-y-4">
             <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-brand-ink">

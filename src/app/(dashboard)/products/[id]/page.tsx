@@ -16,10 +16,19 @@ export default function EditProductPage() {
       .get<AdminProduct>(`/products/${encodeURIComponent(params.id)}`)
       .then((product) => {
         const { id, name, size, width, length, kind, price, unitName, material, origin, thicknessMm,
-          guide, imageUrl, imagePublicId, imageAlt, description, active, featured, sortOrder } = product;
+          guide, imageUrl, imagePublicId, imageAlt, galleryImages, installationVideos, specifications,
+          description, active, featured, sortOrder } = product;
         setInitial({
           id, name, size, width, length, kind, price, unitName, material, origin, thicknessMm,
-          guide, imageUrl, imagePublicId, imageAlt, description, active, featured, sortOrder,
+          guide, imageUrl, imagePublicId, imageAlt,
+          galleryImages: galleryImages?.length
+            ? galleryImages
+            : imageUrl
+              ? [{ url: imageUrl, publicId: imagePublicId, alt: imageAlt, category: 'product', caption: '' }]
+              : [],
+          installationVideos: installationVideos ?? [],
+          specifications: specifications ?? [],
+          description, active, featured, sortOrder,
         });
       })
       .catch((e) => setError(e instanceof Error ? e.message : 'Product could not be loaded.'));

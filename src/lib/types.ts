@@ -36,11 +36,27 @@ export interface AdminProduct {
   imageUrl: string | null;
   imagePublicId: string | null;
   imageAlt: string;
+  galleryImages: ProductGalleryImage[];
+  installationVideos: string[];
+  specifications: ProductSpecification[];
   description: string;
   active: boolean;
   featured: boolean;
   sortOrder: number;
   updatedAt: string;
+}
+
+export interface ProductGalleryImage {
+  url: string;
+  publicId: string | null;
+  alt: string;
+  category: 'product' | 'installation' | 'customer';
+  caption: string;
+}
+
+export interface ProductSpecification {
+  name: string;
+  value: string;
 }
 
 export type BillingDocumentType = 'invoice' | 'quotation';
