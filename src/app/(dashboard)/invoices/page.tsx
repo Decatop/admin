@@ -58,7 +58,7 @@ export default function BillingDocumentsPage() {
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="page-title">Invoices &amp; quotations</h1>
-          <p className="page-subtitle">Create client documents, record invoice payments, and print or save as PDF.</p>
+          <p className="page-subtitle">Create client documents, record invoice payments, and download invoices or quotations as PDFs.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href="/invoices/settings" className="btn-ghost"><Settings2 size={16} /> Invoice settings</Link>

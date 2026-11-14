@@ -1,9 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Check, FileOutput, Printer, RotateCw, Trash2 } from 'lucide-react';
+import { ArrowDownToLine, ArrowLeft, Check, FileOutput, Printer, RotateCw, Trash2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import type { BillingDocument } from '@/lib/types';
 import BillingDocumentPrintout from './BillingDocumentPrintout';
@@ -37,8 +37,11 @@ export default function BillingDocumentView({ id }: { id: string }) {
   const [document, setDocument] = useState<BillingDocument | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [pdfError, setPdfError] = useState('');
+  const [pdfExporting, setPdfExporting] = useState(false);
   const [busy, setBusy] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  const printoutRef = useRef<HTMLDivElement>(null);
   const [payment, setPayment] = useState<PaymentInput>({
     amount: 0,
     paymentDate: today(),
@@ -120,6 +123,42 @@ export default function BillingDocumentView({ id }: { id: string }) {
     }
   }
 
+  async function exportPdf() {
+    const printout = printoutRef.current;
+    if (!document || !printout) {
+      setPdfError('The invoice preview is not ready to export.');
+      return;
+    }
+
+    setPdfExporting(true);
+    setPdfError('');
+    try {
+      const { default: html2pdf } = await import('html2pdf.js');
+      const safeDocumentNumber = document.documentNumber.replace(/[^a-zA-Z0-9._-]+/g, '-');
+      await html2pdf()
+        .set({
+          margin: [12, 12, 12, 12],
+          filename: `${document.documentType}-${safeDocumentNumber}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: {
+            allowTaint: false,
+            backgroundColor: '#ffffff',
+            scale: 2,
+            scrollX: 0,
+            scrollY: 0,
+            useCORS: true,
+          },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        })
+        .from(printout)
+        .save();
+    } catch (e) {
+      setPdfError(e instanceof Error ? `PDF export failed: ${e.message}` : 'PDF export failed.');
+    } finally {
+      setPdfExporting(false);
+    }
+  }
+
   if (loading) return <p className="text-sm text-brand-muted">Loading document…</p>;
   if (!document) {
     return (
@@ -141,8 +180,11 @@ export default function BillingDocumentView({ id }: { id: string }) {
           <button type="button" className="btn-ghost" onClick={() => void load()} disabled={busy}>
             <RotateCw size={15} /> Refresh
           </button>
-          <button type="button" className="btn-primary" onClick={() => window.print()}>
-            <Printer size={16} /> Print / Save PDF
+          <button type="button" className="btn-primary" onClick={() => void exportPdf()} disabled={pdfExporting}>
+            <ArrowDownToLine size={16} /> {pdfExporting ? 'Exporting PDF…' : 'Download PDF'}
+          </button>
+          <button type="button" className="btn-ghost" onClick={() => window.print()}>
+            <Printer size={16} /> Print
           </button>
         </div>
       </div>
@@ -215,6 +257,7 @@ export default function BillingDocumentView({ id }: { id: string }) {
       </div>
 
       {error && <p role="alert" className="no-print mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+      {pdfError && <p role="alert" className="no-print mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{pdfError}</p>}
 
       {showPayment && (
         <form onSubmit={recordPayment} className="no-print mb-5 grid gap-4 rounded-xl border border-brand-primary/20 bg-white p-5 shadow-soft sm:grid-cols-2 lg:grid-cols-5">
@@ -254,7 +297,9 @@ export default function BillingDocumentView({ id }: { id: string }) {
         </form>
       )}
 
-      <BillingDocumentPrintout document={document} />
+      <div ref={printoutRef}>
+        <BillingDocumentPrintout document={document} />
+      </div>
 
       {isInvoice && document.payments.length > 0 && (
         <section className="no-print card mx-auto mt-5 max-w-[210mm]">

@@ -100,7 +100,7 @@ export default function BillingDocumentPrintout({ document }: { document: Billin
           </thead>
           <tbody>
             {document.lineItems.map((item, index) => (
-              <tr key={`${index}-${item.description}`} className="border-b border-slate-100 align-top">
+              <tr key={`${index}-${item.description}`} className="break-inside-avoid border-b border-slate-100 align-top">
                 <td className="py-3 pr-3 font-medium">{item.description}</td>
                 <td className="px-2 py-3 text-right tabular-nums">{item.quantity.toLocaleString('en-NG')}</td>
                 <td className="px-2 py-3 text-slate-600">{item.unit}</td>
@@ -177,7 +177,7 @@ export default function BillingDocumentPrintout({ document }: { document: Billin
             </thead>
             <tbody>
               {document.payments.map((payment) => (
-                <tr key={payment.id} className="border-b border-slate-100">
+                <tr key={payment.id} className="break-inside-avoid border-b border-slate-100">
                   <td className="py-2 pr-3">{formatDate(payment.paymentDate)}</td>
                   <td className="px-2 py-2">{payment.method}</td>
                   <td className="px-2 py-2">{payment.reference || '—'}</td>
