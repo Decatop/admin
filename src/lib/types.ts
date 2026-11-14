@@ -58,6 +58,7 @@ export type BillingDocumentStatus =
 export type BillingDiscountType = 'fixed' | 'percent';
 
 export interface BillingLineItemInput {
+  productId?: string | null;
   description: string;
   quantity: number;
   unit: string;
@@ -70,6 +71,7 @@ export interface BillingLineItem extends BillingLineItemInput {
 
 export interface BillingDocumentInput {
   documentType: BillingDocumentType;
+  customerId: string | null;
   clientName: string;
   clientEmail: string | null;
   clientPhone: string | null;
@@ -88,6 +90,17 @@ export interface BillingDocumentInput {
   paymentInstructions: string;
   notes: string;
   terms: string;
+}
+
+export interface BillingCustomer {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  taxId: string;
+  address: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface BillingCompanySnapshot {
