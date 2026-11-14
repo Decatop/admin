@@ -16,6 +16,8 @@ import {
   Menu,
   X,
   Webhook,
+  ShoppingBag,
+  Receipt,
   type LucideIcon,
 } from 'lucide-react';
 import { logout, getAdminEmail } from '@/lib/auth';
@@ -29,6 +31,8 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/invoices', label: 'Invoices & Quotes', icon: Receipt },
+  { href: '/products', label: 'Products', icon: ShoppingBag },
   { href: '/articles', label: 'Articles', icon: FileText },
   { href: '/categories', label: 'Categories', icon: Tags },
   { href: '/hero', label: 'Hero Designer', icon: ImageIcon },

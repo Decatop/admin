@@ -20,6 +20,124 @@ export interface ArticleFull extends ArticleListItem {
   article_categories?: { category_id: string }[];
 }
 
+export interface AdminProduct {
+  id: string;
+  name: string;
+  size: string;
+  width: number;
+  length: number;
+  kind: 'sheet' | 'strip' | 'roll';
+  price: number | null;
+  unitName: string;
+  material: string | null;
+  origin: string | null;
+  thicknessMm: number | null;
+  guide: string | null;
+  imageUrl: string | null;
+  imagePublicId: string | null;
+  imageAlt: string;
+  description: string;
+  active: boolean;
+  featured: boolean;
+  sortOrder: number;
+  updatedAt: string;
+}
+
+export type BillingDocumentType = 'invoice' | 'quotation';
+export type BillingDocumentStatus =
+  | 'draft'
+  | 'sent'
+  | 'partially_paid'
+  | 'paid'
+  | 'overdue'
+  | 'void'
+  | 'accepted'
+  | 'declined'
+  | 'expired'
+  | 'converted';
+export type BillingDiscountType = 'fixed' | 'percent';
+
+export interface BillingLineItemInput {
+  description: string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+}
+
+export interface BillingLineItem extends BillingLineItemInput {
+  lineTotal: number;
+}
+
+export interface BillingDocumentInput {
+  documentType: BillingDocumentType;
+  clientName: string;
+  clientEmail: string | null;
+  clientPhone: string | null;
+  clientTaxId: string;
+  clientReference: string;
+  clientAddress: string;
+  issueDate: string;
+  dueDate: string | null;
+  validUntil: string | null;
+  lineItems: BillingLineItemInput[];
+  discountType: BillingDiscountType;
+  discountValue: number;
+  shippingAmount: number;
+  taxLabel: string;
+  taxRate: number;
+  paymentInstructions: string;
+  notes: string;
+  terms: string;
+}
+
+export interface BillingCompanySnapshot {
+  businessName: string;
+  logoUrl: string | null;
+  phone: string;
+  whatsapp: string;
+  email: string;
+  addressLines: string[];
+}
+
+export interface BillingPayment {
+  id: string;
+  amount: number;
+  paymentDate: string;
+  method: string;
+  reference: string;
+  note: string;
+  createdAt: string;
+}
+
+export interface BillingDocument extends Omit<BillingDocumentInput, 'lineItems'> {
+  id: string;
+  documentNumber: string;
+  convertedTo: string | null;
+  status: BillingDocumentStatus;
+  currency: 'NGN';
+  lineItems: BillingLineItem[];
+  subtotal: number;
+  discountAmount: number;
+  taxAmount: number;
+  totalAmount: number;
+  amountPaid: number;
+  balanceDue: number;
+  company: BillingCompanySnapshot;
+  companyTaxId: string;
+  payments: BillingPayment[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BillingSettings {
+  taxIdentifier: string;
+  defaultTaxRate: number;
+  defaultDueDays: number;
+  defaultQuoteValidityDays: number;
+  paymentInstructions: string;
+  defaultTerms: string;
+}
+
 export interface Hero {
   heading: string;
   subheading: string;

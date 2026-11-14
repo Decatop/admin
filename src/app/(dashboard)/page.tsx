@@ -11,6 +11,7 @@ import {
   Image as ImageIcon,
   Palette,
   ArrowRight,
+  Receipt,
   type LucideIcon,
 } from 'lucide-react';
 import { api } from '@/lib/api';
@@ -26,6 +27,7 @@ const CARDS: { key: keyof Stats; label: string; icon: LucideIcon; tint: string }
 
 const QUICK: { href: string; label: string; desc: string; icon: LucideIcon }[] = [
   { href: '/articles/new', label: 'Write a new article', desc: 'Publish decor tips & guides', icon: PenLine },
+  { href: '/invoices', label: 'Create an invoice or quote', desc: 'Prepare client paperwork', icon: Receipt },
   { href: '/hero', label: 'Design the hero', desc: 'Headline, image & colors', icon: ImageIcon },
   { href: '/carousel', label: 'Manage carousel', desc: 'Showcase your work', icon: GalleryHorizontalEnd },
   { href: '/appearance', label: 'Brand & logo', desc: 'Colors and logo', icon: Palette },
