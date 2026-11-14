@@ -37,7 +37,7 @@ export default function BillingDocumentPrintout({ document }: { document: Billin
           className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
         >
           <div
-            className="absolute -inset-[30%] rotate-[-35deg] opacity-[0.10]"
+            className="absolute -inset-[30%] rotate-[-35deg] opacity-[0.07]"
             style={{
               backgroundImage: `url("${document.company.logoUrl}")`,
               backgroundRepeat: 'repeat',
