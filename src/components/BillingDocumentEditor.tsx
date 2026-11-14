@@ -660,11 +660,6 @@ export default function BillingDocumentEditor({
             <h2 className="text-sm font-bold text-brand-ink">Items and services</h2>
             <p className="mt-1 text-xs text-brand-muted">Choose a catalog product to fill its description, unit and price automatically, or enter a custom service.</p>
           </div>
-          <button type="button" className="btn-ghost" disabled={productSaving} onClick={() =>
-            setField('lineItems', [...form.lineItems, { productId: null, description: '', quantity: 1, unit: 'piece', unitPrice: 0 }])
-          }>
-            <Plus size={16} /> Add line
-          </button>
         </div>
 
         <div className="space-y-3">
@@ -826,6 +821,13 @@ export default function BillingDocumentEditor({
               )}
             </div>
           ))}
+        </div>
+        <div className="flex justify-end">
+          <button type="button" className="btn-ghost" disabled={productSaving} onClick={() =>
+            setField('lineItems', [...form.lineItems, { productId: null, description: '', quantity: 1, unit: 'piece', unitPrice: 0 }])
+          }>
+            <Plus size={16} /> Add line
+          </button>
         </div>
       </section>
 

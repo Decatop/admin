@@ -137,7 +137,10 @@ body {
     padding: 0 !important;
     border: 0 !important;
     box-shadow: none !important;
+    background-color: #F9F2EA !important;
     color: #111827 !important;
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
   }
 
   .billing-print-document thead {

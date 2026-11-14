@@ -17,6 +17,8 @@ function humanStatus(status: BillingDocument['status']): string {
   return status.replaceAll('_', ' ');
 }
 
+const companyWebsiteUrl = 'https://interiors.nasuru.com';
+
 export default function BillingDocumentPrintout({ document }: { document: BillingDocument }) {
   const isInvoice = document.documentType === 'invoice';
   const discountLabel =
@@ -25,8 +27,26 @@ export default function BillingDocumentPrintout({ document }: { document: Billin
       : 'Discount';
 
   return (
-    <article className="billing-print-document mx-auto max-w-[210mm] border border-black/10 bg-white p-6 text-slate-900 shadow-soft sm:p-10">
-      <header className="flex flex-wrap items-start justify-between gap-6 border-b-2 border-brand-primary pb-6">
+    <article
+      className="billing-print-document relative isolate mx-auto max-w-[210mm] border border-black/10 bg-[#F9F2EA] p-6 text-slate-900 shadow-soft sm:p-10"
+      style={{ backgroundColor: '#F9F2EA' }}
+    >
+      {document.company.logoUrl && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+        >
+          <div
+            className="absolute -inset-[30%] rotate-[-35deg] opacity-[0.15]"
+            style={{
+              backgroundImage: `url("${document.company.logoUrl}")`,
+              backgroundRepeat: 'repeat',
+              backgroundSize: '55mm 55mm',
+            }}
+          />
+        </div>
+      )}
+      <header className="relative z-10 flex flex-wrap items-start justify-between gap-6 border-b-2 border-brand-primary pb-6">
         <div className="min-w-[220px]">
           {document.company.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -61,7 +81,7 @@ export default function BillingDocumentPrintout({ document }: { document: Billin
         </div>
       </header>
 
-      <section className="grid gap-6 border-b border-slate-200 py-6 sm:grid-cols-2">
+      <section className="relative z-10 grid gap-6 border-b border-slate-200 py-6 sm:grid-cols-2">
         <div>
           <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Bill to</p>
           <h2 className="mt-2 text-lg font-bold text-slate-900">{document.clientName}</h2>
@@ -87,7 +107,7 @@ export default function BillingDocumentPrintout({ document }: { document: Billin
         </dl>
       </section>
 
-      <div className="overflow-x-auto">
+      <div className="relative z-10 overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           <thead>
             <tr className="border-b-2 border-slate-300 text-left text-xs uppercase tracking-wide text-slate-500">
@@ -112,7 +132,7 @@ export default function BillingDocumentPrintout({ document }: { document: Billin
         </table>
       </div>
 
-      <section className="mt-6 grid gap-8 sm:grid-cols-[1fr_290px]">
+      <section className="relative z-10 mt-6 grid gap-8 sm:grid-cols-[1fr_290px]">
         <div className="space-y-5">
           {document.paymentInstructions && (
             <div>
@@ -164,7 +184,7 @@ export default function BillingDocumentPrintout({ document }: { document: Billin
       </section>
 
       {isInvoice && document.payments.length > 0 && (
-        <section className="mt-8">
+        <section className="relative z-10 mt-8">
           <h3 className="text-xs font-bold uppercase tracking-wide text-slate-500">Payments received</h3>
           <table className="mt-2 w-full border-collapse text-sm">
             <thead>
@@ -189,8 +209,13 @@ export default function BillingDocumentPrintout({ document }: { document: Billin
         </section>
       )}
 
-      <footer className="mt-10 border-t border-slate-200 pt-4 text-center text-xs text-slate-500">
+      <footer className="relative z-10 mt-10 border-t border-slate-200 pt-4 text-center text-xs text-slate-500">
         Thank you for choosing {document.company.businessName}.
+        <p className="mt-1">
+          <a href={companyWebsiteUrl} className="font-semibold text-brand-primary underline underline-offset-2">
+            interiors.nasuru.com
+          </a>
+        </p>
       </footer>
     </article>
   );
