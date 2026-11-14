@@ -87,6 +87,130 @@ function toInput(document: BillingDocument): BillingDocumentInput {
   };
 }
 
+interface StoredBillingDraft {
+  version: 1;
+  status: 'editing' | 'saved';
+  updatedAt: string;
+  editor: BillingEditorSnapshot;
+}
+
+interface BillingEditorSnapshot {
+  form: BillingDocumentInput;
+  customerDraft: CustomerDraft;
+  showCustomerForm: boolean;
+  quickProduct: QuickProductDraft;
+  addingProductForLine: number | null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isBillingDocumentInput(value: unknown): value is BillingDocumentInput {
+  if (!isRecord(value)) return false;
+  const nullableText = (field: unknown) => field === null || typeof field === 'string';
+  const lineItems = value.lineItems;
+
+  return (
+    (value.documentType === 'invoice' || value.documentType === 'quotation') &&
+    nullableText(value.customerId) &&
+    typeof value.clientName === 'string' &&
+    nullableText(value.clientEmail) &&
+    nullableText(value.clientPhone) &&
+    typeof value.clientTaxId === 'string' &&
+    typeof value.clientReference === 'string' &&
+    typeof value.clientAddress === 'string' &&
+    typeof value.issueDate === 'string' &&
+    nullableText(value.dueDate) &&
+    nullableText(value.validUntil) &&
+    Array.isArray(lineItems) &&
+    lineItems.every((item) =>
+      isRecord(item) &&
+      (item.productId === undefined || nullableText(item.productId)) &&
+      typeof item.description === 'string' &&
+      typeof item.quantity === 'number' &&
+      Number.isFinite(item.quantity) &&
+      typeof item.unit === 'string' &&
+      typeof item.unitPrice === 'number' &&
+      Number.isFinite(item.unitPrice),
+    ) &&
+    (value.discountType === 'fixed' || value.discountType === 'percent') &&
+    typeof value.discountValue === 'number' &&
+    Number.isFinite(value.discountValue) &&
+    typeof value.shippingAmount === 'number' &&
+    Number.isFinite(value.shippingAmount) &&
+    typeof value.taxLabel === 'string' &&
+    typeof value.taxRate === 'number' &&
+    Number.isFinite(value.taxRate) &&
+    typeof value.paymentInstructions === 'string' &&
+    typeof value.notes === 'string' &&
+    typeof value.terms === 'string'
+  );
+}
+
+function isBillingEditorSnapshot(value: unknown): value is BillingEditorSnapshot {
+  if (
+    !isRecord(value) ||
+    !isBillingDocumentInput(value.form) ||
+    !isRecord(value.customerDraft) ||
+    !isRecord(value.quickProduct)
+  ) {
+    return false;
+  }
+
+  const customerDraft = value.customerDraft;
+  const quickProduct = value.quickProduct;
+  return (
+    ['name', 'email', 'phone', 'taxId', 'address'].every(
+      (field) => typeof customerDraft[field] === 'string',
+    ) &&
+    typeof value.showCustomerForm === 'boolean' &&
+    ['name', 'size', 'width', 'length', 'price', 'unitName', 'material', 'origin', 'thicknessMm'].every(
+      (field) => typeof quickProduct[field] === 'string',
+    ) &&
+    (quickProduct.kind === 'sheet' || quickProduct.kind === 'strip' || quickProduct.kind === 'roll') &&
+    (value.addingProductForLine === null ||
+      (typeof value.addingProductForLine === 'number' &&
+        Number.isInteger(value.addingProductForLine) &&
+        value.addingProductForLine >= 0))
+  );
+}
+
+function isStoredBillingDraft(value: unknown): value is StoredBillingDraft {
+  return (
+    isRecord(value) &&
+    value.version === 1 &&
+    (value.status === 'editing' || value.status === 'saved') &&
+    typeof value.updatedAt === 'string' &&
+    isBillingEditorSnapshot(value.editor)
+  );
+}
+
+function readBrowserDraft(key: string, documentType?: BillingDocumentType): StoredBillingDraft | null {
+  const raw = window.localStorage.getItem(key);
+  if (!raw) return null;
+
+  const value: unknown = JSON.parse(raw);
+  if (
+    !isStoredBillingDraft(value) ||
+    (documentType && value.editor.form.documentType !== documentType)
+  ) {
+    throw new Error('The saved browser draft is invalid and could not be restored.');
+  }
+  return value;
+}
+
+function writeBrowserDraft(
+  key: string,
+  editor: BillingEditorSnapshot,
+  status: StoredBillingDraft['status'],
+): string {
+  const updatedAt = new Date().toISOString();
+  const draft: StoredBillingDraft = { version: 1, status, updatedAt, editor };
+  window.localStorage.setItem(key, JSON.stringify(draft));
+  return updatedAt;
+}
+
 function productDescription(product: AdminProduct): string {
   const details = [
     product.size,
@@ -195,6 +319,10 @@ export default function BillingDocumentEditor({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [browserDraftError, setBrowserDraftError] = useState('');
+  const [browserDraftUpdatedAt, setBrowserDraftUpdatedAt] = useState<string | null>(null);
+  const [browserDraftRestored, setBrowserDraftRestored] = useState(false);
+  const [browserDraftReady, setBrowserDraftReady] = useState(false);
   const [companyWarning, setCompanyWarning] = useState(false);
   const [products, setProducts] = useState<AdminProduct[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
@@ -211,6 +339,9 @@ export default function BillingDocumentEditor({
   const [productSaving, setProductSaving] = useState(false);
   const [productCreateError, setProductCreateError] = useState('');
   const totals = useMemo(() => (form ? previewTotals(form) : null), [form]);
+  const browserDraftKey = `nasuru-admin-billing-draft:v1:${id
+    ? `document:${encodeURIComponent(id)}`
+    : `new:${documentType}`}`;
 
   useEffect(() => {
     let active = true;
@@ -260,29 +391,112 @@ export default function BillingDocumentEditor({
     let active = true;
     async function load() {
       setLoading(true);
+      setForm(null);
+      setBrowserDraftReady(false);
+      setBrowserDraftError('');
+      setBrowserDraftUpdatedAt(null);
+      setBrowserDraftRestored(false);
+      setCompanyWarning(false);
+      setShowCustomerForm(false);
+      setCustomerDraft(emptyCustomerDraft);
+      setQuickProduct(emptyQuickProductDraft);
+      setAddingProductForLine(null);
       setError('');
+
+      let browserDraft: StoredBillingDraft | null = null;
+      try {
+        browserDraft = readBrowserDraft(browserDraftKey, id ? undefined : documentType);
+      } catch (draftError) {
+        if (active) {
+          setBrowserDraftError(
+            draftError instanceof Error
+              ? draftError.message
+              : 'The saved browser draft could not be restored.',
+          );
+        }
+      }
+
       try {
         if (id) {
-          const document = await api.get<BillingDocument>(`/billing-documents/${encodeURIComponent(id)}`);
-          if (document.status !== 'draft') {
-            router.replace(`/invoices/${encodeURIComponent(id)}`);
-            return;
-          }
-          if (active) {
-            setForm(toInput(document));
-            setCompanyWarning(
-              !document.company.logoUrl ||
-              (!document.company.phone && !document.company.whatsapp) ||
-              document.company.addressLines.length === 0,
-            );
+          try {
+            const document = await api.get<BillingDocument>(`/billing-documents/${encodeURIComponent(id)}`);
+            if (document.status !== 'draft') {
+              router.replace(`/invoices/${encodeURIComponent(id)}`);
+              return;
+            }
+            if (active) {
+              if (browserDraft && browserDraft.editor.form.documentType !== document.documentType) {
+                setBrowserDraftError('The saved browser draft does not match this document and was ignored.');
+                browserDraft = null;
+              }
+              const restoredDraft = browserDraft?.status === 'editing' ? browserDraft.editor : null;
+              setForm(restoredDraft?.form ?? toInput(document));
+              if (restoredDraft) {
+                setCustomerDraft(restoredDraft.customerDraft);
+                setShowCustomerForm(restoredDraft.showCustomerForm);
+                setQuickProduct(restoredDraft.quickProduct);
+                setAddingProductForLine(
+                  restoredDraft.addingProductForLine !== null &&
+                    restoredDraft.addingProductForLine < restoredDraft.form.lineItems.length
+                    ? restoredDraft.addingProductForLine
+                    : null,
+                );
+              }
+              setBrowserDraftRestored(browserDraft?.status === 'editing');
+              setBrowserDraftUpdatedAt(browserDraft?.status === 'editing' ? browserDraft.updatedAt : null);
+              setBrowserDraftReady(true);
+              setCompanyWarning(
+                !document.company.logoUrl ||
+                (!document.company.phone && !document.company.whatsapp) ||
+                document.company.addressLines.length === 0,
+              );
+            }
+          } catch (loadError) {
+            if (active && browserDraft) {
+              setForm(browserDraft.editor.form);
+              setCustomerDraft(browserDraft.editor.customerDraft);
+              setShowCustomerForm(browserDraft.editor.showCustomerForm);
+              setQuickProduct(browserDraft.editor.quickProduct);
+              setAddingProductForLine(
+                browserDraft.editor.addingProductForLine !== null &&
+                  browserDraft.editor.addingProductForLine < browserDraft.editor.form.lineItems.length
+                  ? browserDraft.editor.addingProductForLine
+                  : null,
+              );
+              setBrowserDraftRestored(browserDraft.status === 'editing');
+              setBrowserDraftUpdatedAt(browserDraft.updatedAt);
+              setBrowserDraftReady(true);
+              setError('The saved document could not be reached. Your browser-saved edits were restored; reconnect before saving them to the server.');
+            } else {
+              throw loadError;
+            }
           }
         } else {
+          if (browserDraft?.status === 'editing') {
+            if (active) {
+              setForm(browserDraft.editor.form);
+              setCustomerDraft(browserDraft.editor.customerDraft);
+              setShowCustomerForm(browserDraft.editor.showCustomerForm);
+              setQuickProduct(browserDraft.editor.quickProduct);
+              setAddingProductForLine(
+                browserDraft.editor.addingProductForLine !== null &&
+                  browserDraft.editor.addingProductForLine < browserDraft.editor.form.lineItems.length
+                  ? browserDraft.editor.addingProductForLine
+                  : null,
+              );
+              setBrowserDraftRestored(true);
+              setBrowserDraftUpdatedAt(browserDraft.updatedAt);
+              setBrowserDraftReady(true);
+            }
+            return;
+          }
           const [settings, company] = await Promise.all([
             api.get<BillingSettings>('/billing-settings'),
             api.get<SiteSettings>('/site-settings'),
           ]);
           if (active) {
             setForm(newDraft(documentType, settings));
+            setBrowserDraftReady(true);
             setCompanyWarning(companyDetailsIncomplete(company));
           }
         }
@@ -296,7 +510,35 @@ export default function BillingDocumentEditor({
     return () => {
       active = false;
     };
-  }, [id, documentType, router]);
+  }, [id, documentType, router, browserDraftKey]);
+
+  useEffect(() => {
+    if (!browserDraftReady || !form) return;
+    try {
+      setBrowserDraftUpdatedAt(writeBrowserDraft(browserDraftKey, {
+        form,
+        customerDraft,
+        showCustomerForm,
+        quickProduct,
+        addingProductForLine,
+      }, 'editing'));
+      setBrowserDraftError('');
+    } catch (draftError) {
+      setBrowserDraftError(
+        draftError instanceof Error
+          ? `This browser could not save your automatic recovery draft: ${draftError.message}`
+          : 'This browser could not save your automatic recovery draft. Use Save draft to store it on the server.',
+      );
+    }
+  }, [
+    addingProductForLine,
+    browserDraftKey,
+    browserDraftReady,
+    customerDraft,
+    form,
+    quickProduct,
+    showCustomerForm,
+  ]);
 
   const setField = <K extends keyof BillingDocumentInput>(key: K, value: BillingDocumentInput[K]) =>
     setForm((previous) => (previous ? { ...previous, [key]: value } : previous));
@@ -457,6 +699,31 @@ export default function BillingDocumentEditor({
       const saved = id
         ? await api.put<BillingDocument>(`/billing-documents/${encodeURIComponent(id)}`, form)
         : await api.post<BillingDocument>('/billing-documents', form);
+      try {
+        window.localStorage.removeItem(browserDraftKey);
+        setBrowserDraftReady(false);
+        setBrowserDraftRestored(false);
+        setBrowserDraftError('');
+      } catch {
+        try {
+          writeBrowserDraft(browserDraftKey, {
+            form: toInput(saved),
+            customerDraft: emptyCustomerDraft,
+            showCustomerForm: false,
+            quickProduct: emptyQuickProductDraft,
+            addingProductForLine: null,
+          }, 'saved');
+          setBrowserDraftReady(false);
+          setBrowserDraftRestored(false);
+          setBrowserDraftError('');
+        } catch (draftError) {
+          setBrowserDraftError(
+            draftError instanceof Error
+              ? `The server saved this draft, but the browser recovery copy could not be cleared or updated: ${draftError.message}`
+              : 'The server saved this draft, but the browser recovery copy could not be cleared or updated.',
+          );
+        }
+      }
       router.push(`/invoices/${encodeURIComponent(saved.id)}`);
       router.refresh();
     } catch (e) {
@@ -505,6 +772,15 @@ export default function BillingDocumentEditor({
       </div>
 
       {error && <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>}
+      {browserDraftError ? (
+        <p role="alert" className="rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-900">{browserDraftError}</p>
+      ) : (
+        <p role="status" className="text-xs text-brand-muted">
+          {browserDraftUpdatedAt
+            ? `Automatically saved in this browser at ${new Date(browserDraftUpdatedAt).toLocaleTimeString()}${browserDraftRestored ? ' · unsaved changes restored' : ''}.`
+            : 'Changes are automatically saved in this browser. Save draft stores them on the server.'}
+        </p>
+      )}
 
       <section className="card space-y-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
