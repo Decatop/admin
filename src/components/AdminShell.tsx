@@ -76,14 +76,14 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       <div className="flex items-center gap-2.5 border-b border-white/10 px-5 py-5">
         {logo ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={logoThumb(logo)} alt="Nasuru Interiors" className="h-9 w-auto" />
+          <img src={logoThumb(logo)} alt="Decatop Global Roofing System" className="h-9 w-auto" />
         ) : (
           <div className="flex h-9 w-9 items-center justify-center bg-brand-gold text-sm font-extrabold text-brand-ink">
             FC
           </div>
         )}
         <div className="leading-tight">
-          <p className="text-sm font-bold text-white">Nasuru Interiors</p>
+          <p className="text-sm font-bold text-white">Decatop Global Roofing System</p>
           <p className="text-[11px] text-white/50">Admin</p>
         </div>
       </div>

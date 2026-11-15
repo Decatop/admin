@@ -24,9 +24,10 @@ export interface AdminProduct {
   id: string;
   name: string;
   size: string;
-  width: number;
-  length: number;
+  width: number | null;
+  length: number | null;
   kind: 'sheet' | 'strip' | 'roll';
+  calculatorEnabled: boolean;
   price: number | null;
   unitName: string;
   material: string | null;

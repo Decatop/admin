@@ -15,11 +15,11 @@ export default function EditProductPage() {
     api
       .get<AdminProduct>(`/products/${encodeURIComponent(params.id)}`)
       .then((product) => {
-        const { id, name, size, width, length, kind, price, unitName, material, origin, thicknessMm,
+        const { id, name, size, width, length, kind, calculatorEnabled, price, unitName, material, origin, thicknessMm,
           guide, imageUrl, imagePublicId, imageAlt, galleryImages, installationVideos, specifications,
           description, active, featured, sortOrder } = product;
         setInitial({
-          id, name, size, width, length, kind, price, unitName, material, origin, thicknessMm,
+          id, name, size, width, length, kind, calculatorEnabled, price, unitName, material, origin, thicknessMm,
           guide, imageUrl, imagePublicId, imageAlt,
           galleryImages: galleryImages?.length
             ? galleryImages

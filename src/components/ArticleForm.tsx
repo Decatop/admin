@@ -37,7 +37,7 @@ export const EMPTY_ARTICLE: ArticleFormValues = {
   keywords: [],
   status: 'draft',
   featured: false,
-  author: 'Nasuru Interiors',
+  author: 'Decatop Global Roofing System',
   category_ids: [],
 };
 

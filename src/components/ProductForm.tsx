@@ -15,6 +15,7 @@ export const EMPTY_PRODUCT: ProductFormValues = {
   width: 1,
   length: 1,
   kind: 'sheet',
+  calculatorEnabled: true,
   price: null,
   unitName: 'sheet',
   material: null,
@@ -88,7 +89,7 @@ export default function ProductForm({ initial }: { initial: ProductFormValues })
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="page-title">{v.id ? 'Edit Product' : 'New Product'}</h1>
-          <p className="page-subtitle">Product details power the public shop and both calculators.</p>
+          <p className="page-subtitle">Product details power the public shop. Calculator use is optional.</p>
         </div>
         <div className="flex gap-2">
           <Link href="/products" className="btn btn-ghost">
@@ -141,56 +142,79 @@ export default function ProductForm({ initial }: { initial: ProductFormValues })
                   className="input"
                   value={v.size}
                   onChange={(e) => set('size', e.target.value)}
-                  placeholder="e.g. 4ft x 8ft"
+                  placeholder="e.g. 0.45 mm · B grade"
                 />
               </div>
-              <div>
-                <label className="label" htmlFor="product-kind">Calculator item type</label>
-                <select
-                  id="product-kind"
-                  className="input"
-                  value={v.kind}
-                  onChange={(e) => set('kind', e.target.value as ProductFormValues['kind'])}
-                >
-                  <option value="sheet">Sheet or board</option>
-                  <option value="strip">Upright strip panel</option>
-                  <option value="roll">Roll</option>
-                </select>
-              </div>
+              {v.calculatorEnabled && (
+                <div>
+                  <label className="label" htmlFor="product-kind">Calculator item type</label>
+                  <select
+                    id="product-kind"
+                    className="input"
+                    value={v.kind}
+                    onChange={(e) => set('kind', e.target.value as ProductFormValues['kind'])}
+                  >
+                    <option value="sheet">Sheet or board</option>
+                    <option value="strip">Upright strip panel</option>
+                    <option value="roll">Roll</option>
+                  </select>
+                </div>
+              )}
             </div>
-            <p className="-mt-2 text-xs text-brand-muted">
-              Width and length below are the real dimensions in metres used by the calculator.
-            </p>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className="label" htmlFor="product-width">Width (m)</label>
-                <input
-                  id="product-width"
-                  required
-                  type="number"
-                  min="0.0001"
-                  step="0.0001"
-                  className="input"
-                  value={v.width}
-                  onChange={(e) => set('width', Number(e.target.value))}
-                />
-              </div>
-              <div>
-                <label className="label" htmlFor="product-length">
-                  {v.kind === 'roll' ? 'Roll length (m)' : 'Length (m)'}
-                </label>
-                <input
-                  id="product-length"
-                  required
-                  type="number"
-                  min="0.0001"
-                  step="0.0001"
-                  className="input"
-                  value={v.length}
-                  onChange={(e) => set('length', Number(e.target.value))}
-                />
-              </div>
-            </div>
+            <label className="flex items-center gap-2 text-sm text-brand-ink" htmlFor="product-calculator-enabled">
+              <input
+                id="product-calculator-enabled"
+                type="checkbox"
+                checked={v.calculatorEnabled}
+                onChange={(event) => {
+                  const enabled = event.target.checked;
+                  setV((previous) => ({
+                    ...previous,
+                    calculatorEnabled: enabled,
+                    width: enabled ? previous.width ?? 1 : null,
+                    length: enabled ? previous.length ?? 1 : null,
+                  }));
+                }}
+              />
+              Use this product in the surface calculator
+            </label>
+            {v.calculatorEnabled && (
+              <>
+                <p className="-mt-2 text-xs text-brand-muted">
+                  Enter the real product dimensions in metres used by the calculator.
+                </p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="label" htmlFor="product-width">Width (m)</label>
+                    <input
+                      id="product-width"
+                      required
+                      type="number"
+                      min="0.0001"
+                      step="0.0001"
+                      className="input"
+                      value={numericInput(v.width)}
+                      onChange={(e) => set('width', e.target.value === '' ? null : Number(e.target.value))}
+                    />
+                  </div>
+                  <div>
+                    <label className="label" htmlFor="product-length">
+                      {v.kind === 'roll' ? 'Roll length (m)' : 'Length (m)'}
+                    </label>
+                    <input
+                      id="product-length"
+                      required
+                      type="number"
+                      min="0.0001"
+                      step="0.0001"
+                      className="input"
+                      value={numericInput(v.length)}
+                      onChange={(e) => set('length', e.target.value === '' ? null : Number(e.target.value))}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="label" htmlFor="product-price">Price in naira</label>
@@ -225,7 +249,7 @@ export default function ProductForm({ initial }: { initial: ProductFormValues })
                   id="product-thickness"
                   type="number"
                   min="0"
-                  step="0.1"
+                  step="0.01"
                   className="input"
                   value={numericInput(v.thicknessMm)}
                   onChange={(e) => set('thicknessMm', e.target.value === '' ? null : Number(e.target.value))}

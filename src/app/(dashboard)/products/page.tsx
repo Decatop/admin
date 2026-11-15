@@ -59,7 +59,7 @@ export default function ProductsPage() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="page-title">Products</h1>
-          <p className="page-subtitle">Manage the shop catalog and calculator prices, sizes and images.</p>
+          <p className="page-subtitle">Manage the shop catalog, price units, specifications and images.</p>
         </div>
         <Link href="/products/new" className="btn-primary">
           <Plus size={18} /> New Product
@@ -104,7 +104,7 @@ export default function ProductsPage() {
           <div className="p-12 text-center">
             <Package size={28} className="mx-auto text-brand-primary" aria-hidden="true" />
             <p className="mt-3 font-semibold text-brand-ink">No products yet</p>
-            <p className="mt-1 text-sm text-brand-muted">Create a product to add it to the shop and calculator.</p>
+            <p className="mt-1 text-sm text-brand-muted">Create a product to add it to the shop; calculator use is optional.</p>
             <Link href="/products/new" className="btn-primary mt-5 inline-flex">
               <Plus size={18} /> New Product
             </Link>

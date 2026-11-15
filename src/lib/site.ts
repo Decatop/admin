@@ -15,10 +15,10 @@ export async function getPublicBranding(): Promise<PublicBranding> {
     const d = await res.json();
     return {
       logo_url: d.logo_url ?? null,
-      business_name: d.business_name ?? 'Nasuru Interiors',
+      business_name: d.business_name ?? 'Decatop Global Roofing System',
     };
   } catch {
-    return { logo_url: null, business_name: 'Nasuru Interiors' };
+    return { logo_url: null, business_name: 'Decatop Global Roofing System' };
   }
 }
 
