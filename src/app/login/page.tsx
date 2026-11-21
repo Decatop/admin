@@ -44,13 +44,13 @@ export default function LoginPage() {
         <div className="mb-6 text-center">
           {logo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoThumb(logo)} alt="Decatop Global Roofing System" className="mx-auto mb-4 h-16 w-auto" />
+            <img src={logoThumb(logo)} alt="Deca Top Global Roofing System" className="mx-auto mb-4 h-16 w-auto" />
           ) : (
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center bg-brand-gold text-lg font-extrabold text-brand-ink">
               FC
             </div>
           )}
-          <h1 className="text-xl font-bold text-white">Decatop Global Roofing System</h1>
+          <h1 className="text-xl font-bold text-white">Deca Top Global Roofing System</h1>
           <p className="mt-1 flex items-center justify-center gap-1.5 text-sm text-white/60">
             <ShieldCheck size={14} className="text-brand-gold" /> Admin Dashboard
           </p>
@@ -68,7 +68,7 @@ export default function LoginPage() {
             className="input mb-4"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="admin@nasuru.com"
+            placeholder="admin@dtoproofingsystem.com"
             autoComplete="username"
           />
 
@@ -90,7 +90,7 @@ export default function LoginPage() {
         </form>
 
         <p className="mt-5 text-center text-xs text-white/40">
-          © {new Date().getFullYear()} Decatop Global Roofing System
+          © {new Date().getFullYear()} Deca Top Global Roofing System
         </p>
       </div>
     </div>

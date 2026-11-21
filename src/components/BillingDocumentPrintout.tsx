@@ -17,7 +17,7 @@ function humanStatus(status: BillingDocument['status']): string {
   return status.replaceAll('_', ' ');
 }
 
-const companyWebsiteUrl = 'https://interiors.nasuru.com';
+const companyWebsiteUrl = 'https://dtoproofingsystem.com';
 
 export default function BillingDocumentPrintout({ document }: { document: BillingDocument }) {
   const isInvoice = document.documentType === 'invoice';
@@ -213,7 +213,7 @@ export default function BillingDocumentPrintout({ document }: { document: Billin
         Thank you for choosing {document.company.businessName}.
         <p className="mt-1">
           <a href={companyWebsiteUrl} className="font-semibold text-brand-primary underline underline-offset-2">
-            interiors.nasuru.com
+            dtoproofingsystem.com
           </a>
         </p>
       </footer>

@@ -339,7 +339,7 @@ export default function BillingDocumentEditor({
   const [productSaving, setProductSaving] = useState(false);
   const [productCreateError, setProductCreateError] = useState('');
   const totals = useMemo(() => (form ? previewTotals(form) : null), [form]);
-  const browserDraftKey = `nasuru-admin-billing-draft:v1:${id
+  const browserDraftKey = `deca-top-admin-billing-draft:v1:${id
     ? `document:${encodeURIComponent(id)}`
     : `new:${documentType}`}`;
 

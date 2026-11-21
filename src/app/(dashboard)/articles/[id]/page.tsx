@@ -28,7 +28,7 @@ export default function EditArticlePage() {
           keywords: a.keywords || [],
           status: a.status,
           featured: a.featured,
-          author: a.author || 'Decatop Global Roofing System',
+          author: a.author || 'Deca Top Global Roofing System',
           category_ids: (a.article_categories ?? []).map((c) => c.category_id),
         }),
       )

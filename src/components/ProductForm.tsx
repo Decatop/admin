@@ -12,10 +12,10 @@ export type ProductFormValues = Omit<AdminProduct, 'id' | 'updatedAt'> & { id?: 
 export const EMPTY_PRODUCT: ProductFormValues = {
   name: '',
   size: '',
-  width: 1,
-  length: 1,
+  width: null,
+  length: null,
   kind: 'sheet',
-  calculatorEnabled: true,
+  calculatorEnabled: false,
   price: null,
   unitName: 'sheet',
   material: null,
@@ -89,7 +89,7 @@ export default function ProductForm({ initial }: { initial: ProductFormValues })
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="page-title">{v.id ? 'Edit Product' : 'New Product'}</h1>
-          <p className="page-subtitle">Product details power the public shop. Calculator use is optional.</p>
+          <p className="page-subtitle">Product details power the public shop. Roofing quantity estimation is coming later.</p>
         </div>
         <div className="flex gap-2">
           <Link href="/products" className="btn btn-ghost">
@@ -116,7 +116,7 @@ export default function ProductForm({ initial }: { initial: ProductFormValues })
                 className="input"
                 value={v.name}
                 onChange={(e) => set('name', e.target.value)}
-                placeholder="e.g. PVC/UV marble sheet"
+                placeholder="e.g. Stone-coated roof tile"
               />
             </div>
             <div>
@@ -147,7 +147,7 @@ export default function ProductForm({ initial }: { initial: ProductFormValues })
               </div>
               {v.calculatorEnabled && (
                 <div>
-                  <label className="label" htmlFor="product-kind">Calculator item type</label>
+                  <label className="label" htmlFor="product-kind">Quantity estimate item type</label>
                   <select
                     id="product-kind"
                     className="input"
@@ -176,12 +176,12 @@ export default function ProductForm({ initial }: { initial: ProductFormValues })
                   }));
                 }}
               />
-              Use this product in the surface calculator
+              Include this product in the future quantity estimator
             </label>
             {v.calculatorEnabled && (
               <>
                 <p className="-mt-2 text-xs text-brand-muted">
-                  Enter the real product dimensions in metres used by the calculator.
+                  Enter the real product dimensions in metres used by a quantity estimator.
                 </p>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>

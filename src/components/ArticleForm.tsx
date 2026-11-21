@@ -37,7 +37,7 @@ export const EMPTY_ARTICLE: ArticleFormValues = {
   keywords: [],
   status: 'draft',
   featured: false,
-  author: 'Decatop Global Roofing System',
+  author: 'Deca Top Global Roofing System',
   category_ids: [],
 };
 
@@ -112,7 +112,7 @@ export default function ArticleForm({ initial }: { initial: ArticleFormValues })
                 className="input"
                 value={v.title}
                 onChange={(e) => set('title', e.target.value)}
-                placeholder="e.g. 10 Wallpaper Ideas to Transform a Small Living Room"
+                placeholder="e.g. Choosing Aluminium Roofing for a Lagos Project"
               />
             </div>
             <div>
@@ -223,7 +223,7 @@ export default function ArticleForm({ initial }: { initial: ArticleFormValues })
                 className="input"
                 value={keywordsText}
                 onChange={(e) => setKeywordsText(e.target.value)}
-                placeholder="interior decor, wallpaper, curtains, wall panels"
+                placeholder="stone-coated tiles, aluminium roofing, alu-zinc sheets"
               />
             </div>
           </div>
